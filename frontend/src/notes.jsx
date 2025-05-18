@@ -5,7 +5,9 @@ import axios from 'axios'; // Make sure axios is installed: npm install axios or
 
 // const baseUrl = 'http://localhost:3001/persons'; // Example: Adjust to your backend API URL
 // // If using a relative URL for a backend on the same host/port (after build):
-const baseUrl = 'http://localhost:3001/api/persons';
+// const baseUrl = 'http://localhost:3001/api/persons';
+// const baseUrl = 'https://introdemo-f9z5.onrender.com/api/persons';
+const baseUrl = '/api/persons';
 
 
 const getAllPersons = () => {
