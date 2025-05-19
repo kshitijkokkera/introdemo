@@ -152,6 +152,7 @@ const App = () => {
 
     // Name does not exist, create new person
     const newPersonObject = { name: trimmedName, number: trimmedNumber }
+    console.log(trimmedName.length)
     personService.create(newPersonObject)
       .then(returnedPerson => {
         setPersons(persons.concat(returnedPerson))
