@@ -20,18 +20,27 @@ const tokenExtractor = (request, response, next) => {
   next()
 }
 
-const userExtractor = (request, response, next) => {
-  const token = request.token
+const userExtractor = async (request, response, next) => {
+  const authorization = request.get('authorization')
 
-  if (token) {
+  if (!authorization || !authorization.startsWith('Bearer ')) {
+    return response.status(401).json({ error: 'token missing' })
+  }
+
+  const token = authorization.replace('Bearer ', '')
+
+  try {
     const decodedToken = jwt.verify(token, process.env.SECRET)
-    request.user = decodedToken.id ? decodedToken : null
-    // logger.info('User ID:', request.user ? request.user.id : 'No user')
+
+    if (!decodedToken.id) {
+      return response.status(401).json({ error: 'token invalid' })
+    }
+
+    request.user = decodedToken
+    next()
+  } catch {
+    return response.status(401).json({ error: 'token invalid' })
   }
-  else {
-    response.status(401).json({ error: 'token missing or invalid' })
-  }
-  next()
 }
 
 const unknownEndpoint = (request, response) => {
