@@ -22,10 +22,14 @@ const tokenExtractor = (request, response, next) => {
 
 const userExtractor = (request, response, next) => {
   const token = request.token
+
   if (token) {
     const decodedToken = jwt.verify(token, process.env.SECRET)
     request.user = decodedToken.id ? decodedToken : null
     // logger.info('User ID:', request.user ? request.user.id : 'No user')
+  }
+  else {
+    response.status(401).json({ error: 'token missing or invalid' })
   }
   next()
 }

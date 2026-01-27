@@ -128,7 +128,7 @@ test('a blog can be made without likes ', async () => {
     title: 'Metaphysics',
     author: 'aristotle',
     url: 'link to book.com',
-    user: (await User.findOne({ username: initialUser.username })).id
+    user: (await User.findOne({ username: initialUser.username }))._id
   }
 
   const response = await api.post('/api/blogs').set('Authorization', `Bearer ${token}`).send(newBlog)
@@ -172,6 +172,31 @@ test('a blog can be updated', async () => {
   const savedBlog = await api.post('/api/blogs').set('Authorization', `Bearer ${token}`).send(newBlog)
   const response = await api.put(`/api/blogs/${savedBlog.body.id}`).set('Authorization', `Bearer ${token}`).send(modifiedBlog)
   assert.deepStrictEqual(response.body, { ...modifiedBlog, id: savedBlog.body.id, user: savedBlog.body.user  })
+})
+
+test('adding a blog fails with 401 if token not provided', async () => {
+  const newBlog = {
+    title: 'Metaphysics',
+    author: 'aristotle',
+    url: 'link to book.com',
+    likes: 3
+  }
+
+  const response = await api.post('/api/blogs').send(newBlog)
+  assert.strictEqual(response.status, 401)
+})
+
+test('deleting a blog fails with 401 if token not provided', async () => {
+  const newBlog = {
+    title: 'Metaphysics',
+    author: 'aristotle',
+    url: 'link to book.com',
+    likes: 3
+  }
+
+  const savedBlog = await api.post('/api/blogs').set('Authorization', `Bearer ${token}`).send(newBlog).expect(201)
+
+  await api.delete(`/api/blogs/${savedBlog.body.id}`).expect(401)
 })
 
 after(async () => {
