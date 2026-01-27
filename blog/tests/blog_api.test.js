@@ -5,7 +5,8 @@ const app = require('../app')
 const assert = require('node:assert')
 const Blog = require('../models/blog')
 const api = supertest(app)
-
+const User = require('../models/user')
+const jwt = require('jsonwebtoken')
 
 const initialBlogs = [
   {
@@ -58,8 +59,23 @@ const initialBlogs = [
   }
 ]
 
+const initialUser = {
+  username: 'root',
+  name: 'Root User',
+  passwordHash: '$2b$10$6EjmS148LIm/wgeGXaylLODe5F77N0Z6QYd9xtBNJ0rhf2VudvRSm',
+  blogs: [],
+  __v: 0
+}
+
+var token = null
 beforeEach(async () => {
   await Blog.deleteMany({})
+  await User.deleteMany({})
+
+  const userForToken = new User(initialUser)
+  await userForToken.save()
+  token = jwt.sign({ username: userForToken.username, id: userForToken._id }, process.env.SECRET)
+  initialBlogs.map(blog => blog.user = userForToken._id)
   await Blog.insertMany(initialBlogs)
 })
 
@@ -93,6 +109,7 @@ test('a valid blog can be added ', async () => {
 
   await api
     .post('/api/blogs')
+    .set('Authorization', `Bearer ${token}`)
     .send(newBlog)
     .expect(201)
     .expect('Content-Type', /application\/json/)
@@ -111,9 +128,10 @@ test('a blog can be made without likes ', async () => {
     title: 'Metaphysics',
     author: 'aristotle',
     url: 'link to book.com',
+    user: (await User.findOne({ username: initialUser.username })).id
   }
 
-  const response = await api.post('/api/blogs').send(newBlog)
+  const response = await api.post('/api/blogs').set('Authorization', `Bearer ${token}`).send(newBlog)
   assert.strictEqual(response.body.likes, 0)
 })
 
@@ -132,12 +150,14 @@ test('a blog can be deleted', async () => {
     title: 'Metaphysics',
     author: 'aristotle',
     url: 'link to book.com',
+    user: (await User.findOne({ username: initialUser.username })).id
   }
 
-  const savedBlog = await api.post('/api/blogs').send(newBlog)
-  await api.delete(`/api/blogs/${savedBlog.id}`)
+  const savedBlog = await api.post('/api/blogs').set('Authorization', `Bearer ${token}`).send(newBlog).expect(201)
+
+  await api.delete(`/api/blogs/${savedBlog.body.id}`).set('Authorization', `Bearer ${token}`).expect(204)
   const response = await api.get('/api/blogs')
-  assert(response.body.length, initialBlogs)
+  assert.strictEqual(response.body.length, initialBlogs.length)
 })
 
 test('a blog can be updated', async () => {
@@ -149,9 +169,9 @@ test('a blog can be updated', async () => {
   }
 
   const modifiedBlog = { ...newBlog, title: 'On the soul' }
-  const savedBlog = await api.post('/api/blogs').send(newBlog)
-  const response = await api.put(`/api/blogs/${savedBlog.body.id}`).send(modifiedBlog)
-  assert.deepStrictEqual(response.body, { ...modifiedBlog, id: savedBlog.body.id })
+  const savedBlog = await api.post('/api/blogs').set('Authorization', `Bearer ${token}`).send(newBlog)
+  const response = await api.put(`/api/blogs/${savedBlog.body.id}`).set('Authorization', `Bearer ${token}`).send(modifiedBlog)
+  assert.deepStrictEqual(response.body, { ...modifiedBlog, id: savedBlog.body.id, user: savedBlog.body.user  })
 })
 
 after(async () => {
