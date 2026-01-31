@@ -44,6 +44,19 @@ const App = () => {
     })
   }
 
+  const likeBlog = id => {
+    const blog = blogs.find(b => b.id === id)
+    const updatedBlog = { ...blog, likes: blog.likes + 1 }
+    blogService.update(id, updatedBlog).then(returnedBlog => {
+      setBlogs(blogs.map(b => (b.id === id ? returnedBlog : b)))
+    }).catch(error => {
+      setNotification({ message: `Error: ${error.response.data.error}`, isError: true })
+      setTimeout(() => {
+        setNotification({ message: null, isError: false })
+      }, 5000)
+    })
+  }
+
   const handleLogin = async (event) => {
     event.preventDefault()
 
@@ -114,7 +127,7 @@ const App = () => {
       </Togglable>
       <button onClick={handleLogout}>logout</button>
       {blogs.map(blog =>
-        <Blog key={blog.id} blog={blog} />
+        <Blog key={blog.id} blog={blog} likeBlog={likeBlog} />
       )}
     </div>
   )
