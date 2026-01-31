@@ -57,6 +57,21 @@ const App = () => {
     })
   }
 
+  const deleteBlog = id => {
+    const blogtobedeleted = blogs.find(b => b.id === id)
+    if (!window.confirm(`Are you sure you want to delete '${blogtobedeleted.title}' by '${blogtobedeleted.author}'?`)) {
+      return
+    }
+    blogService.deleteBlog(id).then(() => {
+      setBlogs(blogs.filter(b => b.id !== id))
+    }).catch(error => {
+      setNotification({ message: `Error: ${error.response.data.error}`, isError: true })
+      setTimeout(() => {
+        setNotification({ message: null, isError: false })
+      }, 5000)
+    })
+  }
+
   const handleLogin = async (event) => {
     event.preventDefault()
 
@@ -127,7 +142,7 @@ const App = () => {
       </Togglable>
       <button onClick={handleLogout}>logout</button>
       {blogs.toSorted((a, b) => b.likes - a.likes).map(blog =>
-        <Blog key={blog.id} blog={blog} likeBlog={likeBlog} />
+        <Blog key={blog.id} blog={blog} likeBlog={likeBlog} deleteButtonVisible={blog.user.id === user.id} deleteBlog={deleteBlog} />
       )}
     </div>
   )

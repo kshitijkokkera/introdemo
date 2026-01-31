@@ -1,7 +1,7 @@
 import Togglable from "./Togglable"
 import { useState } from "react"
 
-const Blog = ({ blog, likeBlog }) => {
+const Blog = ({ blog, likeBlog, deleteButtonVisible, deleteBlog }) => {
   const [visible, setVisible] = useState(false)
 
   const blogStyle = {
@@ -23,6 +23,9 @@ const Blog = ({ blog, likeBlog }) => {
           <div>{blog.url}</div>
           <div>likes {blog.likes} <button onClick={() => likeBlog(blog.id)}>like</button></div>
           <div>{blog.author}</div>
+          {deleteButtonVisible &&
+            <button onClick={() => deleteBlog(blog.id)}>remove</button>
+          }
         </div>
       }
     </div>
