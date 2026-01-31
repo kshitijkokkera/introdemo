@@ -3,13 +3,14 @@ import Blog from './components/Blog'
 import blogService from './services/blogs'
 import loginService from './services/login'
 import Notification from './components/Notification'
+import BlogForm from './components/BlogForm'
+import Togglable from './components/Togglable'
 
 const App = () => {
   const [blogs, setBlogs] = useState([])
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
-  const [newBlog, setNewBlog] = useState({ title: '', author: '', url: '' })
   const [notification, setNotification] = useState({ message: null, isError: false })
 
   useEffect(() => {
@@ -27,11 +28,9 @@ const App = () => {
     }
   }, [])
 
-  const addBlog = event => {
-    event.preventDefault()
-    blogService.create(newBlog).then(returnedBlog => {
+  const addBlog = blogObject => {
+    blogService.create(blogObject).then(returnedBlog => {
       setBlogs(blogs.concat(returnedBlog))
-      setNewBlog({ title: '', author: '', url: '' })
       setNotification({ message: `Blog '${returnedBlog.title}' by '${returnedBlog.author}' added successfully`, isError: false })
       setTimeout(() => {
         setNotification({ message: null, isError: false })
@@ -105,48 +104,14 @@ const App = () => {
     )
   }
 
-  const blogForm = () => (
-    <form onSubmit={addBlog}>
-      <div>
-        <label>
-          title
-          <input
-            type="text"
-            value={newBlog.title}
-            onChange={({ target }) => setNewBlog({ ...newBlog, title: target.value })}
-          />
-        </label>
-      </div>
-      <div>
-        <label>
-          author
-          <input
-            type="text"
-            value={newBlog.author}
-            onChange={({ target }) => setNewBlog({ ...newBlog, author: target.value })}
-          />
-        </label>
-      </div>
-      <div>
-        <label>
-          url
-          <input
-            type="text"
-            value={newBlog.url}
-            onChange={({ target }) => setNewBlog({ ...newBlog, url: target.value })}
-          />
-        </label>
-      </div>
-      <button type="submit">create</button>
-    </form>
-  )
-
   return (
     <div>
       <h2>blogs</h2>
       <Notification message={notification.message} isError={notification.isError} />
       {user.name} logged in
-      {blogForm()}
+      <Togglable buttonLabel="create new blog">
+        <BlogForm createBlog={addBlog} />
+      </Togglable>
       <button onClick={handleLogout}>logout</button>
       {blogs.map(blog =>
         <Blog key={blog.id} blog={blog} />
